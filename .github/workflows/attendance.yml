@@ -1,0 +1,32 @@
+name: Attendance
+
+# Fires only on PR *open*, never on merge — merging is a separate, manual,
+# later step and must never gate attendance.
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  mark-attendance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r .github/scripts/requirements.txt
+
+      - name: Mark GitHub presence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          SHEET_ID: ${{ secrets.ATTENDANCE_SHEET_ID }}
+        run: python .github/scripts/mark_attendance.py
