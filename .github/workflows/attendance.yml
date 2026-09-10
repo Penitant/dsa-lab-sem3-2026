@@ -1,14 +1,14 @@
 name: Attendance
 
-# Fires only on PR *open*, never on merge — merging is a separate, manual,
+# Fires only on PR open, never on merge — merging is a separate, manual,
 # later step and must never gate attendance.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   mark-attendance:
@@ -20,13 +20,64 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install -r .github/scripts/requirements.txt
+      - run: pip install gspread google-auth
 
-      - name: Mark GitHub presence
+      - name: Look up student in roster
+        id: roster
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          SHEET_ID: ${{ secrets.ATTENDANCE_SHEET_ID }}
-        run: python .github/scripts/mark_attendance.py
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          roll_no=$(jq -r --arg u "$PR_AUTHOR" '.[$u].roll_no // empty' roster.json)
+          if [ -z "$roll_no" ]; then
+            gh pr comment "$PR_NUMBER" --body "GitHub username not found in roster.json — attendance not recorded. Contact the instructor if this is a mistake."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "roll_no=$roll_no" >> "$GITHUB_OUTPUT"
+
+      - name: Get changed files
+        id: files
+        if: steps.roster.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api "repos/${{ github.repository }}/pulls/$PR_NUMBER/files" --paginate -q '.[].filename' > changed_files.txt
+
+      - name: Verify changes are within student's own folder
+        id: scope
+        if: steps.roster.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ROLL_NO: ${{ steps.roster.outputs.roll_no }}
+        run: |
+          prefix="students/$ROLL_NO/"
+          offending=""
+          while IFS= read -r f; do
+            case "$f" in
+              "$prefix"*) ;;
+              *) offending="$offending- $f\n" ;;
+            esac
+          done < changed_files.txt
+          if [ -n "$offending" ]; then
+            gh pr comment "$PR_NUMBER" --body "$(printf 'Changes must be within your own `%s` folder to count for attendance. Files outside that folder in this PR:\n%b' "$prefix" "$offending")"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      - name: Mark attendance
+        if: steps.roster.outputs.found == 'true' && steps.scope.outputs.ok == 'true'
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          ROLL_NO: ${{ steps.roster.outputs.roll_no }}
+        run: |
+          key_file="$RUNNER_TEMP/service-account.json"
+          echo "$GOOGLE_SERVICE_ACCOUNT_KEY" > "$key_file"
+          python scripts/mark_attendance.py "$ROLL_NO" "$(date -u +%F)" --key-file "$key_file"
+          rm -f "$key_file"
