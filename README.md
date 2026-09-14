@@ -9,12 +9,12 @@ when a student opens a PR.
 ## Structure
 
 ```
-roster.json              # github_username -> {roll_no, name}
-students/<roll_no>/dayN/ # student submissions, one folder per student
-assignments/dayN.md      # assignment text (YAML frontmatter + description)
-.github/workflows/       # attendance.yml, triggered on pull_request: [opened]
-scripts/                 # mark_attendance.py, called by the workflow
-docs/                    # optional GitHub Pages attendance dashboard
+roster.json               # github_username -> {roll_no, name}
+students/<roll_no>/dayN/  # student submissions, one folder per student
+assignments/weekN.md      # assignment text (YAML frontmatter + description)
+.github/workflows/        # attendance.yml, build-dashboard.yml
+scripts/                  # mark_attendance.py, build_dashboard.py
+docs/                     # GitHub Pages dashboard (index.html + assignments.json)
 ```
 
 ## For students
@@ -53,3 +53,24 @@ Set these under repo Settings → Secrets and variables → Actions:
   JSON), then share the Sheet with that service account's email address.
 - `GOOGLE_SHEET_ID` — the target Google Sheet's ID, taken from its URL:
   `https://docs.google.com/spreadsheets/d/<THIS_PART>/edit`.
+
+## Assignments dashboard
+
+Assignments live at `assignments/weekN.md` (not `dayN.md`), organized by week
+rather than calendar date. On every push to `main` that touches
+`assignments/**`, `.github/workflows/build-dashboard.yml` regenerates
+`docs/assignments.json` from all `weekN.md` frontmatter and pushes it back as
+a bot commit.
+
+`docs/assignments.json` is auto-generated — never hand-edit it, your changes
+will be overwritten on the next push to `assignments/`. `docs/index.html` is
+a static page (served via GitHub Pages) that fetches that JSON and renders
+it.
+
+The same page also shows attendance, pulled from `docs/attendance.json`
+(also auto-generated, also never hand-edit). `.github/workflows/build-attendance.yml`
+runs `scripts/build_attendance.py` — after every `Attendance` workflow run and
+on a schedule — to read the full roster's attendance straight from the
+Google Sheet and publish it. This publishes every enrolled student's roll_no,
+name, and per-date attendance to the public GitHub Pages URL — there is no
+per-student privacy gate.

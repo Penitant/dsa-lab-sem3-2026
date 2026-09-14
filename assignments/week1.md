@@ -1,6 +1,6 @@
 ---
 title: Example Assignment Title
-date: 2026-01-01
+week: 1
 category: Example Category
 link: https://yourorg.sharepoint.com/example
 ---
