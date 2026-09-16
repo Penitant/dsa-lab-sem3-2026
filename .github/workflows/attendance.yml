@@ -22,6 +22,16 @@ jobs:
 
       - run: pip install gspread google-auth
 
+      - name: Write service account key
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          key_file="$RUNNER_TEMP/service-account.json"
+          echo "$GOOGLE_SERVICE_ACCOUNT_KEY" > "$key_file"
+          echo "GOOGLE_SERVICE_ACCOUNT_KEY_FILE=$key_file" >> "$GITHUB_ENV"
+          echo "GOOGLE_SHEET_ID=$GOOGLE_SHEET_ID" >> "$GITHUB_ENV"
+
       - name: Look up student in roster
         id: roster
         env:
@@ -29,14 +39,13 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          roll_no=$(jq -r --arg u "$PR_AUTHOR" '.[$u].roll_no // empty' roster.json)
-          if [ -z "$roll_no" ]; then
-            gh pr comment "$PR_NUMBER" --body "GitHub username not found in roster.json — attendance not recorded. Contact the instructor if this is a mistake."
+          if roll_no=$(python scripts/lookup_roster.py "$PR_AUTHOR"); then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "roll_no=$roll_no" >> "$GITHUB_OUTPUT"
+          else
+            gh pr comment "$PR_NUMBER" --body "GitHub username not found in the roster — attendance not recorded. Contact the instructor if this is a mistake."
             echo "found=false" >> "$GITHUB_OUTPUT"
-            exit 0
           fi
-          echo "found=true" >> "$GITHUB_OUTPUT"
-          echo "roll_no=$roll_no" >> "$GITHUB_OUTPUT"
 
       - name: Get changed files
         id: files
@@ -73,11 +82,9 @@ jobs:
       - name: Mark attendance
         if: steps.roster.outputs.found == 'true' && steps.scope.outputs.ok == 'true'
         env:
-          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
           ROLL_NO: ${{ steps.roster.outputs.roll_no }}
-        run: |
-          key_file="$RUNNER_TEMP/service-account.json"
-          echo "$GOOGLE_SERVICE_ACCOUNT_KEY" > "$key_file"
-          python scripts/mark_attendance.py "$ROLL_NO" "$(date -u +%F)" --key-file "$key_file"
-          rm -f "$key_file"
+        run: python scripts/mark_attendance.py "$ROLL_NO" "$(date -u +%F)"
+
+      - name: Clean up service account key
+        if: always()
+        run: rm -f "$GOOGLE_SERVICE_ACCOUNT_KEY_FILE"

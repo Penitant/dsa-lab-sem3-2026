@@ -9,19 +9,22 @@ when a student opens a PR.
 ## Structure
 
 ```
-roster.json               # github_username -> {roll_no, name}
 students/<roll_no>/dayN/  # student submissions, one folder per student
 assignments/weekN.md      # assignment text (YAML frontmatter + description)
 .github/workflows/        # attendance.yml, build-dashboard.yml
-scripts/                  # mark_attendance.py, build_dashboard.py
+scripts/                  # mark_attendance.py, lookup_roster.py, build_dashboard.py
 docs/                     # GitHub Pages dashboard (index.html + assignments.json)
 ```
+
+The roster (`github_username` -> `roll_no`) lives in a "Roster" tab in the
+attendance Google Sheet, not in this repo. Edit it directly in the sheet —
+there's no git-based roster file to update.
 
 ## For students
 
 1. Fork this repo.
-2. Add yourself to `roster.json` (or ask to be added) with your GitHub
-   username as the key.
+2. Make sure you're listed in the "Roster" tab of the attendance Google
+   Sheet (ask the instructor if you're not).
 3. For each day's assignment, create `students/<your-roll_no>/dayN/` with
    your solution and open a PR into `main`. One PR per day, touching only
    your own folder.
@@ -30,8 +33,9 @@ docs/                     # GitHub Pages dashboard (index.html + assignments.jso
 
 Opening a PR triggers `.github/workflows/attendance.yml`, which:
 
-1. Looks up the PR author's username in `roster.json`. If not found, it
-   comments on the PR and stops — nothing is written to the sheet.
+1. Runs `scripts/lookup_roster.py` to look up the PR author's username in
+   the "Roster" tab of the Google Sheet. If not found, it comments on the
+   PR and stops — nothing is written to the sheet.
 2. Confirms every changed file is under `students/<their-roll_no>/`. If not,
    it comments on the PR explaining the folder rule and stops.
 3. If both checks pass, runs `scripts/mark_attendance.py` to write

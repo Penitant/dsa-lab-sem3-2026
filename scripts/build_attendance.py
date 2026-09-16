@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 import gspread
@@ -12,11 +13,27 @@ from google.oauth2.service_account import Credentials
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 OUTPUT_PATH = Path("docs/attendance.json")
 HEADER_RE = re.compile(r"^(.*) (Class|GitHub)$")
+ROSTER_TAB_NAME = "Roster"
 
 
-def load_roll_no_to_name():
-    roster = json.loads(Path("roster.json").read_text())
-    return {v["roll_no"]: v["name"] for v in roster.values()}
+def header_index(header, name):
+    try:
+        return header.index(name)
+    except ValueError:
+        sys.exit(f"'{ROSTER_TAB_NAME}' tab is missing required column '{name}'")
+
+
+def load_roll_no_to_name(gc, sheet_id):
+    ws = gc.open_by_key(sheet_id).worksheet(ROSTER_TAB_NAME)
+    header = ws.row_values(1)
+    roll_no_col = header_index(header, "roll_no")
+    name_col = header_index(header, "name")
+
+    mapping = {}
+    for row in ws.get_all_values()[1:]:
+        if len(row) > roll_no_col and row[roll_no_col].strip():
+            mapping[row[roll_no_col].strip()] = row[name_col].strip() if len(row) > name_col else ""
+    return mapping
 
 
 def parse_date_columns(header):
@@ -50,13 +67,15 @@ def main():
 
     header, body = rows[0], rows[1:]
     date_cols = parse_date_columns(header)
-    roll_no_to_name = load_roll_no_to_name()
+    roll_no_to_name = load_roll_no_to_name(gc, sheet_id)
 
     students = []
     for row in body:
         roll_no = row[0].strip() if row else ""
         if not roll_no:
             continue
+        if roll_no not in roll_no_to_name:
+            sys.exit(f"roll_no '{roll_no}' from the attendance sheet has no matching row in the '{ROSTER_TAB_NAME}' tab")
         weeks = []
         present_count = 0
         for date in sorted(date_cols):
@@ -71,7 +90,7 @@ def main():
         students.append(
             {
                 "roll_no": roll_no,
-                "name": roll_no_to_name.get(roll_no, ""),
+                "name": roll_no_to_name[roll_no],
                 "percent": percent,
                 "weeks": weeks,
             }
