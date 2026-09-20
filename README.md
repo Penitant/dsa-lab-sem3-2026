@@ -39,10 +39,23 @@ Opening a PR triggers `.github/workflows/attendance.yml`, which:
 2. Confirms every changed file is under `students/<their-roll_no>/`. If not,
    it comments on the PR explaining the folder rule and stops.
 3. If both checks pass, runs `scripts/mark_attendance.py` to write
-   "Present" into that student's `GitHub` column for today's date in the
-   attendance Google Sheet, via a service account. It never touches the
-   `Class` column — that's marked manually by humans separately. Final
-   attendance is `AND(Class, GitHub)`, computed in the sheet.
+   "Submitted" into that student's row for today's date in the bot-owned
+   "Submissions" tab, via a service account.
+
+The Google Sheet has three tabs:
+
+- **Roster** — `github_username | roll_no | name`. Edited by humans.
+- **Attendance** — `roll_no | name | <date>...`, marked `P`/`A` (or
+  `Present`/`Absent`) by humans taking physical roll call. The bot never
+  writes here.
+- **Submissions** — `roll_no | <date>...`, marked `Submitted` by the bot
+  when a PR passes the checks above. Auto-created on first write if it
+  doesn't exist yet. A blank cell for a student/date means no valid PR was
+  opened that day — useful for spotting who to follow up with.
+
+Final attendance is `AND(Attendance, Submissions)` per date, computed by
+`scripts/build_attendance.py` when it builds the dashboard — not by a
+formula in the sheet itself.
 
 Merging PRs is a separate, manual, batched decision and does not affect
 attendance.

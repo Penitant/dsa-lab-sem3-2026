@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# Marks GitHub attendance for a student in the Google Sheet.
-# Sheet layout: col A = roll_no, row 1 headers "<date> GitHub" / "<date> Class".
+# Marks a student "Submitted" for a date in the bot-owned Submissions tab.
 import argparse
 import os
 import sys
@@ -9,10 +8,16 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+TAB_NAME = "Submissions"
 
 
-def github_header(date_str):
-    return f"{date_str} GitHub"
+def get_or_create_tab(sh):
+    try:
+        return sh.worksheet(TAB_NAME)
+    except gspread.exceptions.WorksheetNotFound:
+        ws = sh.add_worksheet(title=TAB_NAME, rows=1000, cols=26)
+        ws.update_cell(1, 1, "roll_no")
+        return ws
 
 
 def find_or_add_row(ws, roll_no):
@@ -48,12 +53,12 @@ def main():
     sheet_id = os.environ["GOOGLE_SHEET_ID"]
     creds = Credentials.from_service_account_file(args.key_file, scopes=SCOPES)
     gc = gspread.authorize(creds)
-    ws = gc.open_by_key(sheet_id).sheet1
+    ws = get_or_create_tab(gc.open_by_key(sheet_id))
 
     row = find_or_add_row(ws, args.roll_no)
-    col = find_or_add_col(ws, github_header(args.date))
-    ws.update_cell(row, col, "Present")
-    print(f"Marked {args.roll_no} present ({args.date}) at row {row}, col {col}.")
+    col = find_or_add_col(ws, args.date)
+    ws.update_cell(row, col, "Submitted")
+    print(f"Marked {args.roll_no} submitted ({args.date}) at row {row}, col {col}.")
 
 
 if __name__ == "__main__":
