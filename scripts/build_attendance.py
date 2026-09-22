@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 import gspread
@@ -14,6 +15,7 @@ ROSTER_TAB_NAME = "Roster"
 CLASS_TAB_NAME = "Attendance"
 SUBMISSIONS_TAB_NAME = "Submissions"
 CLASS_PRESENT_VALUES = {"p", "present"}
+SUBMISSION_WINDOW_DAYS = 2
 
 
 def header_index(header, name, tab_name):
@@ -61,6 +63,27 @@ def read_dated_tab(sh, tab_name):
     return data
 
 
+def parse_class_date(date_str):
+    try:
+        return date.fromisoformat(date_str)
+    except ValueError:
+        sys.exit(f"'{CLASS_TAB_NAME}' tab has a non-ISO date column: '{date_str}' (expected YYYY-MM-DD)")
+
+
+def has_submission_in_window(roll_no_submissions, class_date):
+    window_end = class_date + timedelta(days=SUBMISSION_WINDOW_DAYS)
+    for sub_date_str, value in roll_no_submissions.items():
+        if value != "Submitted":
+            continue
+        try:
+            sub_date = date.fromisoformat(sub_date_str)
+        except ValueError:
+            continue
+        if class_date <= sub_date <= window_end:
+            return True
+    return False
+
+
 def main():
     key_file = os.environ["GOOGLE_SERVICE_ACCOUNT_KEY_FILE"]
     sheet_id = os.environ["GOOGLE_SHEET_ID"]
@@ -73,7 +96,8 @@ def main():
     roll_no_to_name = load_roll_no_to_name(sh)
 
     roll_nos = sorted(set(class_data) | set(submission_data))
-    dates = sorted({d for v in class_data.values() for d in v} | {d for v in submission_data.values() for d in v})
+    class_dates = sorted({d for v in class_data.values() for d in v})
+    class_dates_parsed = {d: parse_class_date(d) for d in class_dates}
 
     students = []
     for roll_no in roll_nos:
@@ -81,12 +105,15 @@ def main():
             sys.exit(f"roll_no '{roll_no}' has attendance data but no matching row in the '{ROSTER_TAB_NAME}' tab")
         weeks = []
         present_count = 0
-        for date in dates:
-            class_val = class_data.get(roll_no, {}).get(date, "").lower()
-            submitted = submission_data.get(roll_no, {}).get(date, "") == "Submitted"
-            present = class_val in CLASS_PRESENT_VALUES and submitted
+        for class_date_str in class_dates:
+            class_val = class_data.get(roll_no, {}).get(class_date_str, "").lower()
+            class_present = class_val in CLASS_PRESENT_VALUES
+            submitted = has_submission_in_window(
+                submission_data.get(roll_no, {}), class_dates_parsed[class_date_str]
+            )
+            present = class_present and submitted
             present_count += present
-            weeks.append({"date": date, "present": present})
+            weeks.append({"date": class_date_str, "present": present})
         percent = round(100 * present_count / len(weeks)) if weeks else 0
         students.append(
             {

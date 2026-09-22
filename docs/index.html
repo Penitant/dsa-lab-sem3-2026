@@ -122,60 +122,74 @@
 
   /* attendance */
 
-  details.student {
+  input.search {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg);
+    font: inherit;
+    font-weight: 700;
+    font-size: 1.15rem;
+    padding: 0 0 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  input.search::placeholder { color: var(--grey); }
+  input.search:focus { outline: none; border-bottom-color: var(--fg); }
+
+  .student {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 1.1rem 0;
     border-bottom: 1px solid var(--line);
   }
 
-  details.student summary {
-    list-style: none;
+  .student-id {
+    flex: 1;
+    min-width: 0;
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.35rem 0;
-    cursor: pointer;
+    align-items: baseline;
+    gap: 0.85rem;
   }
 
-  details.student summary::-webkit-details-marker { display: none; }
-
-  .student-id { flex: 1; min-width: 0; }
-
   .student-roll {
-    display: block;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--grey);
     letter-spacing: 0.03em;
+    white-space: nowrap;
   }
 
   .student-name {
-    display: block;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     font-weight: 800;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .student-pct {
+  .student-stats {
     flex-shrink: 0;
-    font-weight: 900;
-    font-size: 1.5rem;
-  }
-
-  .weeks {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem 1.1rem;
-    padding: 0 0 1.75rem;
+    align-items: baseline;
+    gap: 0.85rem;
   }
 
-  .week-dot {
-    font-size: 0.9rem;
+  .student-days {
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--grey);
   }
 
-  .week-dot.present { color: var(--fg); }
+  .student-pct {
+    font-weight: 900;
+    font-size: 1.3rem;
+    min-width: 3.5ch;
+    text-align: right;
+  }
 
   .empty {
     padding: 2.5rem 0;
@@ -253,20 +267,44 @@
         el.innerHTML = '<p class="empty">No attendance recorded yet.</p>';
         return;
       }
-      el.innerHTML = data.map(s => `
-        <details class="student">
-          <summary>
+
+      const rows = data.map(s => {
+        const present = s.weeks.filter(w => w.present).length;
+        const total = s.weeks.length;
+        const search = escapeAttr(`${s.roll_no} ${s.name}`.toLowerCase());
+        return `
+          <div class="student" data-search="${search}">
             <span class="student-id">
               <span class="student-roll">${escapeHtml(s.roll_no)}</span>
               <span class="student-name">${escapeHtml(s.name)}</span>
             </span>
-            <span class="student-pct">${s.percent}%</span>
-          </summary>
-          <div class="weeks">
-            ${s.weeks.map(w => `<span class="week-dot ${w.present ? "present" : ""}">${escapeHtml(w.date)}</span>`).join("")}
+            <span class="student-stats">
+              <span class="student-days">${present}/${total}</span>
+              <span class="student-pct">${s.percent}%</span>
+            </span>
           </div>
-        </details>
-      `).join("");
+        `;
+      }).join("");
+
+      el.innerHTML = `
+        <input type="search" class="search" placeholder="Search roll no. or name" autocomplete="off">
+        <div class="student-list">${rows}</div>
+        <p class="empty search-empty" hidden>No matches.</p>
+      `;
+
+      const input = el.querySelector(".search");
+      const studentEls = [...el.querySelectorAll(".student")];
+      const emptyMsg = el.querySelector(".search-empty");
+      input.addEventListener("input", () => {
+        const q = input.value.trim().toLowerCase();
+        let visible = 0;
+        studentEls.forEach(row => {
+          const match = row.dataset.search.includes(q);
+          row.hidden = !match;
+          if (match) visible++;
+        });
+        emptyMsg.hidden = visible !== 0;
+      });
     }
 
     document.querySelectorAll("nav.tabs button").forEach(btn => {
