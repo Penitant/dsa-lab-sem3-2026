@@ -129,6 +129,22 @@
 
   a.week-row:hover .week-arrow { color: var(--fg); transform: translateX(4px); }
 
+  .status { font-weight: 800; }
+  .status.open { color: var(--fg); }
+  .status.closed, .status.upcoming { color: var(--grey); }
+
+  .window {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin: 0 0 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .window code { font-family: var(--mono); font-size: 0.95rem; }
+
   /* single assignment */
 
   .back {
@@ -250,9 +266,9 @@
     flex-shrink: 0;
   }
 
-  .cell.P { background: var(--fg); }
-  .cell.C, .cell.S { background: var(--dim); }
-  .cell.A { border: 1.5px solid var(--dim); }
+  .cell.full { background: var(--fg); }
+  .cell.half { background: linear-gradient(to right, var(--fg) 50%, transparent 50%); border: 1.5px solid var(--fg); }
+  .cell.none { border: 1.5px solid var(--dim); }
 
   .student { border-bottom: 1px solid var(--line); }
 
@@ -281,10 +297,19 @@
 
   .detail-row {
     display: grid;
-    grid-template-columns: 5.5rem 1fr auto;
-    gap: 1rem;
-    padding: 0.35rem 0;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "date result" "checks checks";
+    gap: 0.15rem 1rem;
+    padding: 0.5rem 0;
     font-size: 0.95rem;
+  }
+
+  .detail-date { grid-area: date; }
+  .detail-checks { grid-area: checks; }
+  .detail-result { grid-area: result; }
+
+  @media (min-width: 640px) {
+    .detail-row { grid-template-columns: 12rem 1fr auto; grid-template-areas: "date checks result"; }
   }
 
   .detail-date { color: var(--grey); font-weight: 700; }
@@ -311,12 +336,22 @@
   <script>
     const view = document.getElementById("view");
     const FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
-    const RECORD_TEXT = {
-      P: { cls: true, pr: true, result: "Present" },
-      C: { cls: true, pr: false, result: "Absent" },
-      S: { cls: false, pr: true, result: "Absent" },
-      A: { cls: false, pr: false, result: "Absent" },
-    };
+
+    function todayISO() {
+      const d = new Date();
+      return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    }
+
+    function windowStatus(a) {
+      const t = todayISO();
+      if (t < a.start) return { key: "upcoming", text: `Opens ${fmtDate(a.start)}` };
+      if (t > a.end) return { key: "closed", text: `Closed ${fmtDate(a.end)}` };
+      return { key: "open", text: `Open · due ${fmtDate(a.end)}` };
+    }
+
+    const recordScore = r => 0.5 * r.class + 0.5 * !!r.submitted;
+    const cellClass = score => score === 1 ? "full" : score ? "half" : "none";
+    const fmtScore = n => String(n).replace(".5", "½").replace(/^0½/, "½");
 
     function esc(str) {
       return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -352,10 +387,11 @@
       if (!data.length) return '<p class="empty">No assignments yet.</p>';
       return data.map(a => {
         const meta = [a.category, a.files.length ? `${a.files.length} file${a.files.length > 1 ? "s" : ""}` : ""].filter(Boolean);
+        const st = windowStatus(a);
         return `
           <a class="week-row" href="#week/${a.week}">
             <div class="week-row-body">
-              <p class="label">Week ${a.week}</p>
+              <p class="label">Week ${a.week} · <span class="status ${st.key}">${esc(st.text)}</span></p>
               <p class="week-title">${esc(a.title || `Week ${a.week}`)}</p>
               <p class="week-meta">${meta.map(esc).join(" · ")}</p>
             </div>
@@ -412,6 +448,11 @@
       return `
         <a class="back" href="#assignments">← All weeks</a>
         <p class="label">Week ${a.week}${a.category ? " · " + esc(a.category) : ""}</p>
+        <div class="window">
+          <div><span class="stat-value">${esc(fmtDate(a.start))} – ${esc(fmtDate(a.end))}</span>
+            <span class="stat-label status ${windowStatus(a).key}">${esc(windowStatus(a).text)}</span></div>
+          <div><span class="stat-label">Submit in</span><br><code>students/&lt;roll-no&gt;/week${a.week}/</code></div>
+        </div>
         <article class="md">${question}</article>
         ${files}`;
     }
@@ -443,9 +484,10 @@
       let data;
       try { data = await getJSON("attendance.json"); }
       catch { return '<p class="empty">Could not load attendance.</p>'; }
-      const { dates, students } = data;
-      if (!students.length || !dates.length) return '<p class="empty">No attendance recorded yet.</p>';
+      const { classes, students } = data;
+      if (!students.length || !classes.length) return '<p class="empty">No attendance recorded yet.</p>';
 
+      const classLabel = (c, opts) => (c.week ? `Week ${c.week} · ` : "") + fmtDate(c.date, opts);
       const avg = Math.round(students.reduce((s, x) => s + x.percent, 0) / students.length);
       const rows = students.map(s => `
         <details class="student" data-roll="${esc(s.roll_no)}" data-pct="${s.percent}"
@@ -456,28 +498,25 @@
               <span class="student-name">${esc(s.name)}</span>
             </span>
             <span class="student-stats">
-              <span class="student-days">${s.present}/${dates.length}</span>
+              <span class="student-days">${fmtScore(s.score)}/${classes.length}</span>
               <span class="student-pct">${s.percent}%</span>
             </span>
             <span class="strip">${s.records.map((r, i) =>
-              `<span class="cell ${r}" title="${esc(fmtDate(dates[i]))}: ${RECORD_TEXT[r].result}"></span>`).join("")}</span>
+              `<span class="cell ${cellClass(recordScore(r))}" title="${esc(classLabel(classes[i]))}: ${fmtScore(recordScore(r))}"></span>`).join("")}</span>
           </summary>
           <div class="detail">
-            ${s.records.map((r, i) => {
-              const t = RECORD_TEXT[r];
-              return `
-                <div class="detail-row">
-                  <span class="detail-date">${esc(fmtDate(dates[i], { weekday: "short", day: "numeric", month: "short" }))}</span>
-                  <span class="detail-checks">Class <b>${t.cls ? "✓" : "✗"}</b> · PR <b>${t.pr ? "✓" : "✗"}</b></span>
-                  <span class="detail-result ${r === "P" ? "" : "no"}">${t.result}</span>
-                </div>`;
-            }).join("")}
+            ${s.records.map((r, i) => `
+              <div class="detail-row">
+                <span class="detail-date">${esc(classLabel(classes[i], { weekday: "short", day: "numeric", month: "short" }))}</span>
+                <span class="detail-checks">Class <b>${r.class ? "✓" : "✗"}</b> · Submitted <b>${r.submitted ? "✓ " + esc(fmtDate(r.submitted)) : "✗"}</b></span>
+                <span class="detail-result ${recordScore(r) === 1 ? "" : "no"}">${fmtScore(recordScore(r))}</span>
+              </div>`).join("")}
           </div>
         </details>`).join("");
 
       return `
         <div class="att-summary">
-          <div><span class="stat-value">${dates.length}</span><span class="stat-label">classes held</span></div>
+          <div><span class="stat-value">${classes.length}</span><span class="stat-label">classes held</span></div>
           <div><span class="stat-value">${avg}%</span><span class="stat-label">class average</span></div>
           <div><span class="stat-value">${esc(fmtDate(data.updated))}</span><span class="stat-label">last updated</span></div>
         </div>
@@ -489,9 +528,9 @@
           </div>
         </div>
         <div class="legend">
-          <span><i class="cell P"></i>Present (class + PR)</span>
-          <span><i class="cell C"></i>Only one of class / PR</span>
-          <span><i class="cell A"></i>Absent</span>
+          <span><i class="cell full"></i>1 · class + submission</span>
+          <span><i class="cell half"></i>½ · one of the two</span>
+          <span><i class="cell none"></i>0</span>
           <span>Tap a student for details</span>
         </div>
         <div class="student-list">${rows}</div>

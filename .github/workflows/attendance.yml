@@ -79,11 +79,16 @@ jobs:
           fi
           echo "ok=true" >> "$GITHUB_OUTPUT"
 
-      - name: Mark attendance
+      - name: Record submission
         if: steps.roster.outputs.found == 'true' && steps.scope.outputs.ok == 'true'
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           ROLL_NO: ${{ steps.roster.outputs.roll_no }}
-        run: python scripts/mark_attendance.py "$ROLL_NO" "$(date -u +%F)"
+          TZ: Asia/Kolkata
+        run: |
+          python scripts/mark_attendance.py "$ROLL_NO" "$(date +%F)" < changed_files.txt > result.md
+          gh pr comment "$PR_NUMBER" --body-file result.md
 
       - name: Clean up service account key
         if: always()

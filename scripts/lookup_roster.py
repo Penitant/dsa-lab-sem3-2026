@@ -38,8 +38,10 @@ def main():
     username_col = header_index(header, "github_username")
     roll_no_col = header_index(header, "roll_no")
 
+    # GitHub usernames are case-insensitive
+    wanted = args.github_username.strip().lower()
     for row in ws.get_all_values()[1:]:
-        if len(row) > username_col and row[username_col].strip() == args.github_username:
+        if len(row) > username_col and row[username_col].strip().lower() == wanted:
             roll_no = row[roll_no_col].strip() if len(row) > roll_no_col else ""
             if roll_no:
                 print(roll_no)

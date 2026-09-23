@@ -12,7 +12,7 @@ In the commands below, replace:
 - `<owner>` — the account this repo lives under (see the URL of this page)
 - `<your-username>` — your GitHub username
 - `<roll-no>` — your roll number exactly as on the roster, e.g. `25UG00413`
-- `N` — the lab number
+- `N` — the week number of the assignment
 
 ---
 
@@ -20,22 +20,27 @@ In the commands below, replace:
 
 ### How attendance works
 
-A class counts as **present** only if both are true:
+Every lab is worth **1**:
 
-1. You are marked present in class.
-2. You **open a pull request** with that lab's work within **2 days** of the
-   class.
+- **½** for being marked present in class on the lab day, and
+- **½** for submitting that week's work before the deadline.
 
-For the PR to count:
+Each assignment shows its dates on the course site, e.g. *21 Sep – 25 Sep*.
+You can open your PR on any day in that window, and it counts towards the
+21 Sep class. After the deadline the bot won't record it.
+
+For a PR to count:
 
 - your GitHub username must be registered with the TA (send it to them before
-  your first PR), and
-- the PR must change files **only** inside `students/<roll-no>/`.
+  your first PR),
+- the PR must change files **only** inside `students/<roll-no>/`, and
+- your work must be in the folder for that week: `students/<roll-no>/weekN/`.
 
-If a check fails, a bot comments on the PR explaining why. Fix it and open a
-**new** PR. Updating the old one doesn't count, because attendance is
-recorded when a PR is opened. Merging happens later and doesn't affect
-attendance.
+The bot comments on every PR saying what it recorded, or why it didn't. If
+something went wrong, fix it and open a **new** PR. Pushing to an old PR
+doesn't count, because submissions are recorded when a PR is opened. Only
+your first submission for a week is kept. Merging happens later and doesn't
+affect attendance.
 
 ### One-time setup
 
@@ -81,10 +86,10 @@ Windows, run the commands in **Git Bash**.
 
    ```bash
    git fetch upstream
-   git switch -c dayN upstream/main
+   git switch -c weekN upstream/main
    ```
 
-   Use a new branch for every lab (`day1`, `day2`, …). Each PR must be
+   Use a new branch for every lab (`week1`, `week2`, …). Each PR must be
    opened fresh; pushing more commits to an old PR won't record attendance.
 
 2. **Read the question** on the course site, or at
@@ -93,13 +98,13 @@ Windows, run the commands in **Git Bash**.
 3. **Create your folder and write your solution**:
 
    ```bash
-   mkdir -p students/<roll-no>/dayN
+   mkdir -p students/<roll-no>/weekN
    ```
 
    If the week has starter code or tests, copy them into your folder:
 
    ```bash
-   cp assignments/weekN/*.py students/<roll-no>/dayN/
+   cp assignments/weekN/*.py students/<roll-no>/weekN/
    ```
 
    Only ever edit files inside `students/<roll-no>/`. Never touch
@@ -108,7 +113,7 @@ Windows, run the commands in **Git Bash**.
 4. **Run the tests**, if there are any:
 
    ```bash
-   cd students/<roll-no>/dayN
+   cd students/<roll-no>/weekN
    pytest -v
    cd -
    ```
@@ -117,29 +122,29 @@ Windows, run the commands in **Git Bash**.
 
    ```bash
    git status                        # should list only files under students/<roll-no>/
-   git add students/<roll-no>/dayN
-   git commit -m "dayN"
-   git push -u origin dayN
+   git add students/<roll-no>/weekN
+   git commit -m "weekN"
+   git push -u origin weekN
    ```
 
 6. **Open the pull request**: go to your fork on GitHub. A yellow banner
-   says *"dayN had recent pushes"*. Click **Compare & pull request**. Check
+   says *"weekN had recent pushes"*. Click **Compare & pull request**. Check
    that:
 
    - **base repository** is `<owner>/dsa-lab-sem3-2026`, **base** is `main`
-   - **head repository** is your fork, **compare** is `dayN`
+   - **head repository** is your fork, **compare** is `weekN`
 
    Then click **Create pull request**.
 
    Alternatively, with the [GitHub CLI](https://cli.github.com/):
 
    ```bash
-   gh pr create --repo <owner>/dsa-lab-sem3-2026 --base main --head <your-username>:dayN --title "<roll-no> dayN" --body ""
+   gh pr create --repo <owner>/dsa-lab-sem3-2026 --base main --head <your-username>:weekN --title "<roll-no> weekN" --body ""
    ```
 
-7. After a minute, check the PR. If the bot has commented, read it, fix the
-   problem, and open a new PR. Your attendance shows up on the course site
-   once the class roll call is entered.
+7. After a minute, check the bot's comment on the PR. ✅ means it's
+   recorded. ❌ explains what to fix; fix it and open a new PR before the
+   deadline. Your attendance shows up on the course site.
 
 ### Common problems
 
@@ -150,6 +155,9 @@ Windows, run the commands in **Git Bash**.
 | `git push` asks for a password | GitHub needs a [personal access token](https://github.com/settings/tokens) or SSH key, not your password. Or run `gh auth login`. |
 | PR shows other people's files or old labs | Your branch wasn't created from `upstream/main`. Redo step 1 with a new branch name. |
 | `fatal: 'upstream' does not appear to be a git repository` | Run step 3 of the one-time setup. |
+| Bot says files must be inside `weekN/` | Put everything in `students/<roll-no>/weekN/`, not directly in `students/<roll-no>/` or a `dayN` folder. |
+| Bot says deadline passed | Submissions close at the end date on the site. It can't be recorded late; talk to the TA. |
+| Bot says not open yet | The assignment's window hasn't started. Open the PR on or after the start date. |
 | Folder is `students/<roll-no>` but PR still rejected | The roll number must match the roster exactly, including upper/lower case. |
 
 Keeping your fork's `main` up to date is optional since you branch from
@@ -168,11 +176,11 @@ git push origin main
 ### Repo layout
 
 ```
-assignments/weekN/        # one folder per week: QUESTION.md + tests/starter code
-students/<roll-no>/dayN/  # student submissions
-docs/index.html           # the course site
-scripts/                  # attendance + site build scripts
-.github/workflows/        # attendance.yml, deploy-pages.yml
+assignments/weekN/         # one folder per week: QUESTION.md + tests/starter code
+students/<roll-no>/weekN/  # student submissions
+docs/index.html            # the course site
+scripts/                   # attendance + site build scripts
+.github/workflows/         # attendance.yml, deploy-pages.yml
 ```
 
 ### Posting an assignment
@@ -191,6 +199,8 @@ scripts/                  # attendance + site build scripts
    title: Binary Search Trees
    week: 3
    category: Trees
+   start: 2026-10-05
+   end: 2026-10-09
    ---
 
    # Binary Search Trees
@@ -204,10 +214,18 @@ scripts/                  # attendance + site build scripts
    Run `pytest -v` in your folder to check your solution.
    ````
 
-   - `title`, `week` and `category` show up on the site. The body is plain
-     Markdown and is displayed as-is.
-   - Relative links like `[bst.py](bst.py)` point to files in the same
-     folder.
+   All five fields are required:
+
+   | Field | Meaning |
+   |---|---|
+   | `title` | Shown on the site. |
+   | `week` | Must match the folder: `week: 3` goes in `assignments/week3/`. |
+   | `category` | Topic, shown on the site. |
+   | `start` | The lab day, `YYYY-MM-DD`. Submissions are recorded under this date, so it must be the date of that class's column in the Attendance tab. No two assignments can share a start date. |
+   | `end` | Last day a PR is accepted, inclusive, `YYYY-MM-DD` (India time). |
+
+   The body is plain Markdown and is displayed as-is. Relative links like
+   `[bst.py](bst.py)` point to files in the same folder.
 
 2. **Optional:** add starter code and tests to the same folder. Every file in
    the folder is listed under the question with a viewer and a download
@@ -234,10 +252,18 @@ scripts/                  # attendance + site build scripts
    ```
 
    The site redeploys automatically in about a minute (Actions tab →
-   **Deploy pages**).
+   **Deploy pages**). If any `QUESTION.md` is malformed, the deploy fails
+   and its log lists every problem; the old site stays up until it's fixed.
 
 To edit or fix an assignment, change the files and push again. PDFs and
 slides don't belong in the repo. Put anything needed into `QUESTION.md`.
+
+- **Extending a deadline:** change `end` and push. Takes effect for PRs
+  opened after the push.
+- **Overlapping labs are fine.** Two weeks' windows can overlap, and a
+  student can submit both in one PR (`students/<roll-no>/week1/` and
+  `students/<roll-no>/week2/`). Each folder is recorded under its own
+  week's `start` date.
 
 ### Taking attendance
 
@@ -247,27 +273,35 @@ Attendance lives in the Google Sheet:
 |---|---|---|
 | **Roster** | `github_username \| roll_no \| name` | TAs |
 | **Attendance** | `roll_no \| name \| 2026-09-18 \| 2026-09-22 \| …` | TAs |
-| **Submissions** | `roll_no \| <date>…` | bot only |
+| **Submissions** | `roll_no \| <start date>…`, cells like `Submitted 2026-10-07` | bot only |
 
 - **New student:** add a row to **Roster**. A student not on the roster gets
   a bot comment and no attendance.
-- **After each class:** add a column to **Attendance** with the date as
-  `YYYY-MM-DD`, and enter `P` for each student who attended. Blank means
-  absent.
+- **After each class:** add a column to **Attendance** headed with the
+  class date as `YYYY-MM-DD` (the same date as that week's `start`), and
+  enter `P` for each student who attended. Blank means absent. Type the
+  header as plain text: if Sheets reformats it as a date like `05/10/2026`,
+  set the column's format to **Plain text** first.
 - **Then publish it:** Actions tab → **Deploy pages** → **Run workflow**.
   Sheet edits don't trigger anything by themselves. The site also refreshes
   automatically whenever a student opens a PR.
 
-The site shows a class as present only if the student is `P` in the
-Attendance tab **and** opened a valid PR on the class date or within 2 days
-after (`SUBMISSION_WINDOW_DAYS` in `scripts/build_attendance.py`).
+Each class is scored **½** for `P` in Attendance plus **½** for a submission
+under that date in Submissions. The site shows the total and a percentage.
 
 When a PR is opened, `.github/workflows/attendance.yml`:
 
 1. looks up the author in **Roster**, commenting and stopping if not found;
 2. checks every changed file is under `students/<roll-no>/`, commenting and
    stopping if not;
-3. writes `Submitted` for today in **Submissions**.
+3. for each `students/<roll-no>/weekN/` folder in the PR, reads
+   `assignments/weekN/QUESTION.md`, and if today (India time) is between
+   `start` and `end`, writes `Submitted <today>` under the `start` date
+   column in **Submissions**. An existing submission is never overwritten;
+4. comments on the PR with what was recorded and why anything wasn't.
+
+To excuse a student or fix a mistake, edit their cell in **Submissions** by
+hand (`Submitted 2026-10-07`) and re-run **Deploy pages**.
 
 ### Merging PRs
 
