@@ -1,13 +1,21 @@
 name: Deploy pages
 
+# Builds the whole site (assignments + attendance) at deploy time, so no
+# generated files are committed. Re-run manually after editing the sheet.
 on:
   push:
     branches: [main]
     paths:
       - "docs/**"
+      - "assignments/**"
+      - "scripts/build_*.py"
+  workflow_run:
+    workflows: ["Attendance"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -17,6 +25,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -24,9 +33,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install gspread google-auth
+
+      - run: python scripts/build_site.py _site
+
+      - name: Build attendance
+        env:
+          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+        run: |
+          key_file="$RUNNER_TEMP/service-account.json"
+          echo "$GOOGLE_SERVICE_ACCOUNT_KEY" > "$key_file"
+          GOOGLE_SERVICE_ACCOUNT_KEY_FILE="$key_file" python scripts/build_attendance.py _site
+          rm -f "$key_file"
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs
+          path: _site
 
       - id: deployment
         uses: actions/deploy-pages@v4

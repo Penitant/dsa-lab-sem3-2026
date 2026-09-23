@@ -2,7 +2,8 @@
 title: Example Assignment Title
 week: 1
 category: Example Category
-link: https://yourorg.sharepoint.com/example
 ---
+
+# Example Assignment Title
 
 Short plain-language description of the assignment goes here.

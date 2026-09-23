@@ -4,15 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DSA Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
   :root {
     --bg: #000000;
     --fg: #ffffff;
     --grey: #8a8a8a;
+    --dim: #4a4a4a;
     --line: #2a2a2a;
+    --panel: #0e0e0e;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
 
   body {
     margin: 0;
@@ -23,6 +31,8 @@
     font-weight: 500;
     line-height: 1.4;
   }
+
+  a { color: inherit; }
 
   header {
     max-width: 900px;
@@ -37,14 +47,9 @@
     line-height: 0.85;
   }
 
-  .wordmark span {
-    display: block;
-  }
-
-  .wordmark .sem {
-    font-size: 0.4em;
-    color: var(--grey);
-  }
+  .wordmark a { text-decoration: none; }
+  .wordmark span { display: block; }
+  .wordmark .sem { font-size: 0.4em; color: var(--grey); }
 
   nav.tabs {
     display: flex;
@@ -52,12 +57,9 @@
     border-bottom: 1px solid var(--line);
   }
 
-  nav.tabs button {
-    appearance: none;
-    border: none;
-    background: none;
+  nav.tabs a {
     color: var(--grey);
-    font: inherit;
+    text-decoration: none;
     font-weight: 800;
     font-size: 1.2rem;
     padding: 0 0 1rem;
@@ -65,7 +67,7 @@
     margin-bottom: -1px;
   }
 
-  nav.tabs button.active {
+  nav.tabs a.active {
     color: var(--fg);
     border-bottom-color: var(--fg);
   }
@@ -75,17 +77,14 @@
     margin: 0 auto;
   }
 
-  section.panel { display: none; }
-  section.panel.active { display: block; }
-
-  .row {
-    padding: 2.25rem 0;
-    border-bottom: 1px solid var(--line);
+  .empty {
+    padding: 2.5rem 0;
+    color: var(--grey);
+    font-size: 1.2rem;
+    font-weight: 700;
   }
 
-  .row:first-child { padding-top: 0; }
-
-  .row-label {
+  .label {
     margin: 0 0 0.65rem;
     color: var(--grey);
     font-size: 0.95rem;
@@ -94,109 +93,205 @@
     text-transform: uppercase;
   }
 
-  .row-title {
-    margin: 0 0 0.5rem;
+  /* assignment list */
+
+  a.week-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+  }
+
+  a.week-row:first-child { padding-top: 0; }
+  .week-row-body { flex: 1; min-width: 0; }
+
+  .week-title {
+    margin: 0 0 0.4rem;
     font-size: clamp(1.5rem, 5.5vw, 2.25rem);
     font-weight: 800;
     line-height: 1.2;
   }
 
-  .row-category {
-    margin: 0 0 1.25rem;
+  .week-meta {
+    margin: 0;
     color: var(--grey);
-    font-size: 1.15rem;
-    font-weight: 500;
+    font-size: 1.1rem;
   }
 
-  .row-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--fg);
-    text-decoration: none;
+  .week-arrow {
+    font-size: 2rem;
     font-weight: 800;
-    font-size: 1.15rem;
-    border-bottom: 1px solid var(--fg);
-    padding-bottom: 0.1rem;
+    color: var(--grey);
+    transition: transform 0.15s, color 0.15s;
   }
+
+  a.week-row:hover .week-arrow { color: var(--fg); transform: translateX(4px); }
+
+  /* single assignment */
+
+  .back {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: var(--grey);
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .back:hover { color: var(--fg); }
+
+  .md { font-size: 1.1rem; line-height: 1.6; overflow-wrap: break-word; }
+  .md h1, .md h2, .md h3 { font-weight: 800; line-height: 1.2; margin: 2rem 0 0.75rem; }
+  .md h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); margin-top: 0; }
+  .md h2 { font-size: 1.5rem; }
+  .md h3 { font-size: 1.2rem; }
+  .md a { text-underline-offset: 3px; }
+  .md code { font-family: var(--mono); font-size: 0.9em; background: var(--panel); border: 1px solid var(--line); padding: 0.1em 0.35em; }
+  .md pre { background: var(--panel); border: 1px solid var(--line); padding: 1rem; overflow-x: auto; }
+  .md pre code { border: none; padding: 0; background: none; }
+  .md blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--dim); color: var(--grey); }
+  .md table { border-collapse: collapse; display: block; overflow-x: auto; }
+  .md th, .md td { border: 1px solid var(--line); padding: 0.4rem 0.75rem; text-align: left; }
+  .md img { max-width: 100%; }
+  .md hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
+
+  .files { margin-top: 3rem; border-top: 1px solid var(--line); padding-top: 2rem; }
+
+  .file { border-bottom: 1px solid var(--line); }
+
+  .file summary {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 1rem 0;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .file summary::-webkit-details-marker { display: none; }
+  .file-name { flex: 1; min-width: 0; font-family: var(--mono); font-weight: 700; overflow-wrap: anywhere; }
+  .file-name::before { content: "+ "; color: var(--grey); }
+  .file[open] .file-name::before { content: "− "; }
+  .file-dl { color: var(--grey); font-weight: 800; font-size: 0.95rem; text-decoration: none; }
+  .file-dl:hover { color: var(--fg); }
+  .file pre { margin: 0 0 1rem; background: var(--panel); border: 1px solid var(--line); padding: 1rem; overflow-x: auto; font-size: 0.9rem; }
+  .file pre code { font-family: var(--mono); background: none; padding: 0; }
 
   /* attendance */
 
+  .att-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-value { display: block; font-size: 2rem; font-weight: 900; line-height: 1.1; }
+  .stat-label { color: var(--grey); font-size: 0.9rem; font-weight: 700; }
+
+  .att-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem;
+  }
+
   input.search {
-    display: block;
-    width: 100%;
+    flex: 1 1 14rem;
+    min-width: 0;
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--line);
     color: var(--fg);
     font: inherit;
     font-weight: 700;
     font-size: 1.15rem;
-    padding: 0 0 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0;
   }
 
   input.search::placeholder { color: var(--grey); }
-  input.search:focus { outline: none; border-bottom-color: var(--fg); }
+  input.search:focus { outline: none; }
+  .att-controls:focus-within { border-bottom-color: var(--fg); }
 
-  .student {
-    display: flex;
-    align-items: baseline;
-    gap: 1rem;
-    padding: 1.1rem 0;
-    border-bottom: 1px solid var(--line);
+  .sort { display: flex; gap: 1rem; }
+
+  .sort button {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--grey);
+    font: inherit;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
   }
 
-  .student-id {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: baseline;
-    gap: 0.85rem;
-  }
+  .sort button.active { color: var(--fg); }
 
-  .student-roll {
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    padding: 1rem 0;
+    color: var(--grey);
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--grey);
-    letter-spacing: 0.03em;
-    white-space: nowrap;
   }
 
-  .student-name {
-    font-size: 1.2rem;
-    font-weight: 800;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
 
-  .student-stats {
+  .cell {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
     flex-shrink: 0;
-    display: flex;
-    align-items: baseline;
-    gap: 0.85rem;
   }
 
-  .student-days {
+  .cell.P { background: var(--fg); }
+  .cell.C, .cell.S { background: var(--dim); }
+  .cell.A { border: 1.5px solid var(--dim); }
+
+  .student { border-bottom: 1px solid var(--line); }
+
+  .student summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem 1rem;
+    padding: 1.1rem 0;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .student summary::-webkit-details-marker { display: none; }
+
+  .student-id { min-width: 0; display: flex; align-items: baseline; gap: 0.85rem; }
+  .student-roll { font-size: 0.85rem; font-weight: 700; color: var(--grey); letter-spacing: 0.03em; white-space: nowrap; }
+  .student-name { font-size: 1.2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .student-stats { display: flex; align-items: baseline; gap: 0.85rem; }
+  .student-days { font-size: 0.95rem; font-weight: 700; color: var(--grey); }
+  .student-pct { font-weight: 900; font-size: 1.3rem; min-width: 4.5ch; text-align: right; }
+
+  .strip { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .detail { padding: 0 0 1.25rem; }
+
+  .detail-row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    gap: 1rem;
+    padding: 0.35rem 0;
     font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--grey);
   }
 
-  .student-pct {
-    font-weight: 900;
-    font-size: 1.3rem;
-    min-width: 3.5ch;
-    text-align: right;
-  }
-
-  .empty {
-    padding: 2.5rem 0;
-    color: var(--grey);
-    font-size: 1.2rem;
-    font-weight: 700;
-  }
+  .detail-date { color: var(--grey); font-weight: 700; }
+  .detail-checks { color: var(--grey); }
+  .detail-checks b { color: var(--fg); font-weight: 800; }
+  .detail-result { font-weight: 800; }
+  .detail-result.no { color: var(--grey); }
 
   @media (min-width: 640px) {
     body { padding: 3.5rem 2rem 6rem; }
@@ -205,119 +300,253 @@
 </head>
 <body>
   <header>
-    <h1 class="wordmark"><span>DSA LAB</span><span class="sem">SEM 3</span></h1>
+    <h1 class="wordmark"><a href="#"><span>DSA LAB</span><span class="sem">SEM 3</span></a></h1>
     <nav class="tabs">
-      <button type="button" data-panel="assignments" class="active">Assignments</button>
-      <button type="button" data-panel="attendance">Attendance</button>
+      <a href="#assignments" data-tab="assignments">Assignments</a>
+      <a href="#attendance" data-tab="attendance">Attendance</a>
     </nav>
   </header>
-  <main>
-    <section id="assignments" class="panel active">
-      <p class="empty">Loading…</p>
-    </section>
-    <section id="attendance" class="panel">
-      <p class="empty">Loading…</p>
-    </section>
-  </main>
+  <main id="view"><p class="empty">Loading…</p></main>
 
   <script>
-    function escapeHtml(str) {
-      const div = document.createElement("div");
-      div.textContent = str ?? "";
-      return div.innerHTML;
+    const view = document.getElementById("view");
+    const FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+    const RECORD_TEXT = {
+      P: { cls: true, pr: true, result: "Present" },
+      C: { cls: true, pr: false, result: "Absent" },
+      S: { cls: false, pr: true, result: "Absent" },
+      A: { cls: false, pr: false, result: "Absent" },
+    };
+
+    function esc(str) {
+      return String(str ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
     }
 
-    function escapeAttr(str) {
-      return escapeHtml(str).replace(/"/g, "&quot;");
+    function fmtDate(iso, opts = { day: "numeric", month: "short" }) {
+      const d = new Date(iso.length === 10 ? iso + "T00:00:00" : iso);
+      return isNaN(d) ? iso : d.toLocaleDateString("en-GB", opts);
     }
 
-    async function renderAssignments() {
-      const el = document.getElementById("assignments");
+    const cache = {};
+    function getJSON(url) {
+      cache[url] ??= fetch(url).then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      });
+      cache[url].catch(() => delete cache[url]);
+      return cache[url];
+    }
+
+    function highlight(codeEl, lang) {
+      if (!window.hljs) return;
+      if (lang && hljs.getLanguage(lang)) codeEl.classList.add("language-" + lang);
+      hljs.highlightElement(codeEl);
+    }
+
+    // ---- assignments ----
+
+    async function showAssignments() {
       let data;
-      try {
-        data = await (await fetch("assignments.json")).json();
-      } catch (err) {
-        el.innerHTML = '<p class="empty">Could not load assignments.</p>';
-        return;
-      }
-      if (!data.length) {
-        el.innerHTML = '<p class="empty">No assignments yet.</p>';
-        return;
-      }
-      el.innerHTML = data.map(a => `
-        <div class="row">
-          <p class="row-label">Week ${a.week}</p>
-          <p class="row-title">${escapeHtml(a.title)}</p>
-          <p class="row-category">${escapeHtml(a.category)}</p>
-          <a class="row-link" href="${escapeAttr(a.link)}" target="_blank" rel="noopener noreferrer">Open ↗</a>
-        </div>
-      `).join("");
-    }
-
-    async function renderAttendance() {
-      const el = document.getElementById("attendance");
-      let data;
-      try {
-        data = await (await fetch("attendance.json")).json();
-      } catch (err) {
-        el.innerHTML = '<p class="empty">Could not load attendance.</p>';
-        return;
-      }
-      if (!data.length) {
-        el.innerHTML = '<p class="empty">No attendance recorded yet.</p>';
-        return;
-      }
-
-      const rows = data.map(s => {
-        const present = s.weeks.filter(w => w.present).length;
-        const total = s.weeks.length;
-        const search = escapeAttr(`${s.roll_no} ${s.name}`.toLowerCase());
+      try { data = await getJSON("assignments.json"); }
+      catch { return '<p class="empty">Could not load assignments.</p>'; }
+      if (!data.length) return '<p class="empty">No assignments yet.</p>';
+      return data.map(a => {
+        const meta = [a.category, a.files.length ? `${a.files.length} file${a.files.length > 1 ? "s" : ""}` : ""].filter(Boolean);
         return `
-          <div class="student" data-search="${search}">
+          <a class="week-row" href="#week/${a.week}">
+            <div class="week-row-body">
+              <p class="label">Week ${a.week}</p>
+              <p class="week-title">${esc(a.title || `Week ${a.week}`)}</p>
+              <p class="week-meta">${meta.map(esc).join(" · ")}</p>
+            </div>
+            <span class="week-arrow" aria-hidden="true">→</span>
+          </a>`;
+      }).join("");
+    }
+
+    function renderMarkdown(text, base) {
+      const body = text.replace(FRONTMATTER_RE, "");
+      if (!window.marked || !window.DOMPurify) return `<pre>${esc(body)}</pre>`;
+      const tpl = document.createElement("template");
+      tpl.innerHTML = DOMPurify.sanitize(marked.parse(body));
+      // make links/images relative to the week folder, not the site root
+      const isRelative = v => v && !/^([a-z][a-z0-9+.-]*:|#|\/)/i.test(v);
+      tpl.content.querySelectorAll("a[href], img[src]").forEach(el => {
+        const attr = el.tagName === "A" ? "href" : "src";
+        const v = el.getAttribute(attr);
+        if (isRelative(v)) el.setAttribute(attr, `${base}/${v}`);
+        if (el.tagName === "A" && !v.startsWith("#")) el.target = "_blank";
+      });
+      return tpl.innerHTML;
+    }
+
+    async function showWeek(n) {
+      let data;
+      try { data = await getJSON("assignments.json"); }
+      catch { return '<p class="empty">Could not load assignments.</p>'; }
+      const a = data.find(x => String(x.week) === n);
+      if (!a) return '<a class="back" href="#assignments">← All weeks</a><p class="empty">No such week.</p>';
+
+      let question;
+      try {
+        const r = await fetch(`${a.path}/QUESTION.md`);
+        if (!r.ok) throw new Error(r.status);
+        question = renderMarkdown(await r.text(), a.path);
+      } catch {
+        question = '<p class="empty">Could not load QUESTION.md.</p>';
+      }
+
+      const files = a.files.length ? `
+        <div class="files">
+          <p class="label">Files</p>
+          ${a.files.map(f => `
+            <details class="file" data-src="${esc(`${a.path}/${f}`)}">
+              <summary>
+                <span class="file-name">${esc(f)}</span>
+                <a class="file-dl" href="${esc(`${a.path}/${f}`)}" download>Download</a>
+              </summary>
+              <pre><code>Loading…</code></pre>
+            </details>`).join("")}
+        </div>` : "";
+
+      return `
+        <a class="back" href="#assignments">← All weeks</a>
+        <p class="label">Week ${a.week}${a.category ? " · " + esc(a.category) : ""}</p>
+        <article class="md">${question}</article>
+        ${files}`;
+    }
+
+    function wireWeek() {
+      view.querySelectorAll(".md pre code").forEach(el => highlight(el));
+      view.querySelectorAll(".file").forEach(det => {
+        det.querySelector(".file-dl").addEventListener("click", e => e.stopPropagation());
+        det.addEventListener("toggle", async () => {
+          if (!det.open || det.dataset.loaded) return;
+          det.dataset.loaded = "1";
+          const code = det.querySelector("code");
+          try {
+            const r = await fetch(det.dataset.src);
+            if (!r.ok) throw new Error(r.status);
+            code.textContent = await r.text();
+            highlight(code, det.dataset.src.split(".").pop().toLowerCase());
+          } catch {
+            code.textContent = "Could not load file.";
+            delete det.dataset.loaded;
+          }
+        });
+      });
+    }
+
+    // ---- attendance ----
+
+    async function showAttendance() {
+      let data;
+      try { data = await getJSON("attendance.json"); }
+      catch { return '<p class="empty">Could not load attendance.</p>'; }
+      const { dates, students } = data;
+      if (!students.length || !dates.length) return '<p class="empty">No attendance recorded yet.</p>';
+
+      const avg = Math.round(students.reduce((s, x) => s + x.percent, 0) / students.length);
+      const rows = students.map(s => `
+        <details class="student" data-roll="${esc(s.roll_no)}" data-pct="${s.percent}"
+                 data-search="${esc(`${s.roll_no} ${s.name}`.toLowerCase())}">
+          <summary>
             <span class="student-id">
-              <span class="student-roll">${escapeHtml(s.roll_no)}</span>
-              <span class="student-name">${escapeHtml(s.name)}</span>
+              <span class="student-roll">${esc(s.roll_no)}</span>
+              <span class="student-name">${esc(s.name)}</span>
             </span>
             <span class="student-stats">
-              <span class="student-days">${present}/${total}</span>
+              <span class="student-days">${s.present}/${dates.length}</span>
               <span class="student-pct">${s.percent}%</span>
             </span>
+            <span class="strip">${s.records.map((r, i) =>
+              `<span class="cell ${r}" title="${esc(fmtDate(dates[i]))}: ${RECORD_TEXT[r].result}"></span>`).join("")}</span>
+          </summary>
+          <div class="detail">
+            ${s.records.map((r, i) => {
+              const t = RECORD_TEXT[r];
+              return `
+                <div class="detail-row">
+                  <span class="detail-date">${esc(fmtDate(dates[i], { weekday: "short", day: "numeric", month: "short" }))}</span>
+                  <span class="detail-checks">Class <b>${t.cls ? "✓" : "✗"}</b> · PR <b>${t.pr ? "✓" : "✗"}</b></span>
+                  <span class="detail-result ${r === "P" ? "" : "no"}">${t.result}</span>
+                </div>`;
+            }).join("")}
           </div>
-        `;
-      }).join("");
+        </details>`).join("");
 
-      el.innerHTML = `
-        <input type="search" class="search" placeholder="Search roll no. or name" autocomplete="off">
+      return `
+        <div class="att-summary">
+          <div><span class="stat-value">${dates.length}</span><span class="stat-label">classes held</span></div>
+          <div><span class="stat-value">${avg}%</span><span class="stat-label">class average</span></div>
+          <div><span class="stat-value">${esc(fmtDate(data.updated))}</span><span class="stat-label">last updated</span></div>
+        </div>
+        <div class="att-controls">
+          <input type="search" class="search" placeholder="Search roll no. or name" autocomplete="off" spellcheck="false">
+          <div class="sort">
+            <button type="button" data-sort="roll" class="active">Roll no.</button>
+            <button type="button" data-sort="pct">Lowest %</button>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i class="cell P"></i>Present (class + PR)</span>
+          <span><i class="cell C"></i>Only one of class / PR</span>
+          <span><i class="cell A"></i>Absent</span>
+          <span>Tap a student for details</span>
+        </div>
         <div class="student-list">${rows}</div>
-        <p class="empty search-empty" hidden>No matches.</p>
-      `;
+        <p class="empty search-empty" hidden>No matches.</p>`;
+    }
 
-      const input = el.querySelector(".search");
-      const studentEls = [...el.querySelectorAll(".student")];
-      const emptyMsg = el.querySelector(".search-empty");
-      input.addEventListener("input", () => {
-        const q = input.value.trim().toLowerCase();
+    function wireAttendance() {
+      const input = view.querySelector(".search");
+      if (!input) return;
+      const list = view.querySelector(".student-list");
+      const rows = [...list.children];
+      const emptyMsg = view.querySelector(".search-empty");
+
+      const filter = () => {
+        const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
         let visible = 0;
-        studentEls.forEach(row => {
-          const match = row.dataset.search.includes(q);
+        rows.forEach(row => {
+          const match = terms.every(t => row.dataset.search.includes(t));
           row.hidden = !match;
-          if (match) visible++;
+          visible += match;
         });
         emptyMsg.hidden = visible !== 0;
+      };
+      input.addEventListener("input", filter);
+      input.addEventListener("search", filter);
+
+      view.querySelectorAll(".sort button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          view.querySelectorAll(".sort button").forEach(b => b.classList.toggle("active", b === btn));
+          const byRoll = (a, b) => a.dataset.roll.localeCompare(b.dataset.roll);
+          rows.sort(btn.dataset.sort === "pct" ? (a, b) => a.dataset.pct - b.dataset.pct || byRoll(a, b) : byRoll);
+          list.append(...rows);
+        });
       });
     }
 
-    document.querySelectorAll("nav.tabs button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("nav.tabs button").forEach(b => b.classList.remove("active"));
-        document.querySelectorAll("section.panel").forEach(p => p.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.panel).classList.add("active");
-      });
-    });
+    // ---- routing ----
 
-    renderAssignments();
-    renderAttendance();
+    let renderId = 0;
+    async function route() {
+      const hash = location.hash.replace(/^#\/?/, "");
+      const week = hash.match(/^week\/(\d+)$/);
+      const tab = hash === "attendance" ? "attendance" : "assignments";
+      document.querySelectorAll("nav.tabs a").forEach(a => a.classList.toggle("active", a.dataset.tab === tab));
+
+      const id = ++renderId;
+      const html = week ? await showWeek(week[1]) : tab === "attendance" ? await showAttendance() : await showAssignments();
+      if (id !== renderId) return;
+      view.innerHTML = html;
+      if (week) { wireWeek(); window.scrollTo(0, 0); }
+      if (tab === "attendance") wireAttendance();
+    }
+
+    window.addEventListener("hashchange", route);
+    window.addEventListener("DOMContentLoaded", route);
   </script>
 </body>
 </html>

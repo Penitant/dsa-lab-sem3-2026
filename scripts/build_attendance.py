@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Combines Attendance + Submissions + Roster tabs into docs/attendance.json.
+# Combines Attendance + Submissions + Roster tabs into <out_dir>/attendance.json.
+# Each record is P (class + PR), C (class only), S (PR only) or A (neither).
 import json
 import os
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import gspread
 from google.oauth2.service_account import Credentials
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-OUTPUT_PATH = Path("docs/attendance.json")
 ROSTER_TAB_NAME = "Roster"
 CLASS_TAB_NAME = "Attendance"
 SUBMISSIONS_TAB_NAME = "Submissions"
 CLASS_PRESENT_VALUES = {"p", "present"}
 SUBMISSION_WINDOW_DAYS = 2
+RECORD_CODES = {(True, True): "P", (True, False): "C", (False, True): "S", (False, False): "A"}
 
 
 def header_index(header, name, tab_name):
@@ -103,28 +104,33 @@ def main():
     for roll_no in roll_nos:
         if roll_no not in roll_no_to_name:
             sys.exit(f"roll_no '{roll_no}' has attendance data but no matching row in the '{ROSTER_TAB_NAME}' tab")
-        weeks = []
-        present_count = 0
+        records = []
         for class_date_str in class_dates:
             class_val = class_data.get(roll_no, {}).get(class_date_str, "").lower()
             class_present = class_val in CLASS_PRESENT_VALUES
             submitted = has_submission_in_window(
                 submission_data.get(roll_no, {}), class_dates_parsed[class_date_str]
             )
-            present = class_present and submitted
-            present_count += present
-            weeks.append({"date": class_date_str, "present": present})
-        percent = round(100 * present_count / len(weeks)) if weeks else 0
+            records.append(RECORD_CODES[(class_present, submitted)])
+        present = records.count("P")
         students.append(
             {
                 "roll_no": roll_no,
                 "name": roll_no_to_name[roll_no],
-                "percent": percent,
-                "weeks": weeks,
+                "present": present,
+                "percent": round(100 * present / len(records)) if records else 0,
+                "records": records,
             }
         )
 
-    OUTPUT_PATH.write_text(json.dumps(students, indent=2) + "\n")
+    out_dir = Path(sys.argv[1] if len(sys.argv) > 1 else "_site")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "updated": datetime.now(timezone.utc).isoformat(timespec="minutes"),
+        "dates": class_dates,
+        "students": students,
+    }
+    (out_dir / "attendance.json").write_text(json.dumps(payload, indent=1) + "\n")
 
 
 if __name__ == "__main__":
