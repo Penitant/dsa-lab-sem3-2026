@@ -364,7 +364,8 @@
 
     const cache = {};
     function getJSON(url) {
-      cache[url] ??= fetch(url).then(r => {
+      // no-cache: revalidate with the server so a rebuilt site shows up on a normal reload
+      cache[url] ??= fetch(url, { cache: "no-cache" }).then(r => {
         if (!r.ok) throw new Error(r.status);
         return r.json();
       });
