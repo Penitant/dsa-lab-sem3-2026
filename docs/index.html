@@ -16,6 +16,9 @@
     --dim: #4a4a4a;
     --line: #2a2a2a;
     --panel: #0e0e0e;
+    --accent: #4ade80;
+    --accent-soft: rgba(74, 222, 128, 0.12);
+    --accent-line: rgba(74, 222, 128, 0.45);
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
 
@@ -34,6 +37,9 @@
 
   a { color: inherit; }
 
+  ::selection { background: var(--accent); color: var(--bg); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
   header {
     max-width: 900px;
     margin: 0 auto 3rem;
@@ -50,6 +56,7 @@
   .wordmark a { text-decoration: none; }
   .wordmark span { display: block; }
   .wordmark .sem { font-size: 0.4em; color: var(--grey); }
+  .wordmark .dot { display: inline; color: var(--accent); }
 
   nav.tabs {
     display: flex;
@@ -67,9 +74,11 @@
     margin-bottom: -1px;
   }
 
+  nav.tabs a:hover { color: var(--fg); }
+
   nav.tabs a.active {
     color: var(--fg);
-    border-bottom-color: var(--fg);
+    border-bottom-color: var(--accent);
   }
 
   main {
@@ -127,11 +136,14 @@
     transition: transform 0.15s, color 0.15s;
   }
 
-  a.week-row:hover .week-arrow { color: var(--fg); transform: translateX(4px); }
+  a.week-row:hover .week-arrow { color: var(--accent); transform: translateX(4px); }
+  a.week-row:hover .week-title { color: var(--accent); }
+  .week-title { transition: color 0.15s; }
 
-  .status { font-weight: 800; }
-  .status.open { color: var(--fg); }
-  .status.closed, .status.upcoming { color: var(--grey); }
+  .status { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .status.open { color: var(--accent); }
+  .status.upcoming { color: var(--fg); }
+  .status.closed { color: var(--grey); }
 
   .window {
     display: flex;
@@ -142,6 +154,8 @@
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
+
+  .window.open { border-top-color: var(--accent-line); }
 
   .window code { font-family: var(--mono); font-size: 0.95rem; }
 
@@ -155,20 +169,22 @@
     text-decoration: none;
   }
 
-  .back:hover { color: var(--fg); }
+  .back:hover { color: var(--accent); }
 
   .md { font-size: 1.1rem; line-height: 1.6; overflow-wrap: break-word; }
   .md h1, .md h2, .md h3 { font-weight: 800; line-height: 1.2; margin: 2rem 0 0.75rem; }
   .md h1 { font-size: clamp(1.75rem, 6vw, 2.5rem); margin-top: 0; }
   .md h2 { font-size: 1.5rem; }
   .md h3 { font-size: 1.2rem; }
-  .md a { text-underline-offset: 3px; }
+  .md a { text-underline-offset: 3px; text-decoration-color: var(--accent); }
+  .md a:hover { color: var(--accent); }
   .md code { font-family: var(--mono); font-size: 0.9em; background: var(--panel); border: 1px solid var(--line); padding: 0.1em 0.35em; }
   .md pre { background: var(--panel); border: 1px solid var(--line); padding: 1rem; overflow-x: auto; }
   .md pre code { border: none; padding: 0; background: none; }
-  .md blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--dim); color: var(--grey); }
+  .md blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--accent); color: var(--grey); }
   .md table { border-collapse: collapse; display: block; overflow-x: auto; }
   .md th, .md td { border: 1px solid var(--line); padding: 0.4rem 0.75rem; text-align: left; }
+  .md th { background: var(--panel); border-bottom-color: var(--accent-line); }
   .md img { max-width: 100%; }
   .md hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0; }
 
@@ -187,10 +203,10 @@
 
   .file summary::-webkit-details-marker { display: none; }
   .file-name { flex: 1; min-width: 0; font-family: var(--mono); font-weight: 700; overflow-wrap: anywhere; }
-  .file-name::before { content: "+ "; color: var(--grey); }
+  .file-name::before { content: "+ "; color: var(--accent); }
   .file[open] .file-name::before { content: "− "; }
   .file-dl { color: var(--grey); font-weight: 800; font-size: 0.95rem; text-decoration: none; }
-  .file-dl:hover { color: var(--fg); }
+  .file-dl:hover { color: var(--accent); }
   .file pre { margin: 0 0 1rem; background: var(--panel); border: 1px solid var(--line); padding: 1rem; overflow-x: auto; font-size: 0.9rem; }
   .file pre code { font-family: var(--mono); background: none; padding: 0; }
 
@@ -228,8 +244,9 @@
   }
 
   input.search::placeholder { color: var(--grey); }
+  input.search { caret-color: var(--accent); }
   input.search:focus { outline: none; }
-  .att-controls:focus-within { border-bottom-color: var(--fg); }
+  .att-controls:focus-within { border-bottom-color: var(--accent); }
 
   .sort { display: flex; gap: 1rem; }
 
@@ -245,7 +262,8 @@
     cursor: pointer;
   }
 
-  .sort button.active { color: var(--fg); }
+  .sort button:hover { color: var(--fg); }
+  .sort button.active { color: var(--accent); }
 
   .legend {
     display: flex;
@@ -266,8 +284,8 @@
     flex-shrink: 0;
   }
 
-  .cell.full { background: var(--fg); }
-  .cell.half { background: linear-gradient(to right, var(--fg) 50%, transparent 50%); border: 1.5px solid var(--fg); }
+  .cell.full { background: var(--accent); }
+  .cell.half { background: linear-gradient(to right, var(--accent) 50%, transparent 50%); border: 1.5px solid var(--accent); }
   .cell.none { border: 1.5px solid var(--dim); }
 
   .student { border-bottom: 1px solid var(--line); }
@@ -285,7 +303,8 @@
 
   .student-id { min-width: 0; display: flex; align-items: baseline; gap: 0.85rem; }
   .student-roll { font-size: 0.85rem; font-weight: 700; color: var(--grey); letter-spacing: 0.03em; white-space: nowrap; }
-  .student-name { font-size: 1.2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .student-name { font-size: 1.2rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.15s; }
+  .student summary:hover .student-name, .student[open] .student-name { color: var(--accent); }
 
   .student-stats { display: flex; align-items: baseline; gap: 0.85rem; }
   .student-days { font-size: 0.95rem; font-weight: 700; color: var(--grey); }
@@ -315,7 +334,7 @@
   .detail-date { color: var(--grey); font-weight: 700; }
   .detail-checks { color: var(--grey); }
   .detail-checks b { color: var(--fg); font-weight: 800; }
-  .detail-result { font-weight: 800; }
+  .detail-result { font-weight: 800; color: var(--accent); }
   .detail-result.no { color: var(--grey); }
 
   @media (min-width: 640px) {
@@ -325,7 +344,7 @@
 </head>
 <body>
   <header>
-    <h1 class="wordmark"><a href="#"><span>DSA LAB</span><span class="sem">SEM 3</span></a></h1>
+    <h1 class="wordmark"><a href="#"><span>DSA LAB<span class="dot">.</span></span><span class="sem">SEM 3</span></a></h1>
     <nav class="tabs">
       <a href="#assignments" data-tab="assignments">Assignments</a>
       <a href="#attendance" data-tab="attendance">Attendance</a>
@@ -449,7 +468,7 @@
       return `
         <a class="back" href="#assignments">← All weeks</a>
         <p class="label">Week ${a.week}${a.category ? " · " + esc(a.category) : ""}</p>
-        <div class="window">
+        <div class="window ${windowStatus(a).key}">
           <div><span class="stat-value">${esc(fmtDate(a.start))} – ${esc(fmtDate(a.end))}</span>
             <span class="stat-label status ${windowStatus(a).key}">${esc(windowStatus(a).text)}</span></div>
           <div><span class="stat-label">Submit in</span><br><code>students/&lt;roll-no&gt;/week${a.week}/</code></div>
