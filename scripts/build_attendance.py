@@ -2,8 +2,8 @@
 # Combines Attendance + Submissions + Roster tabs into <out_dir>/attendance.json.
 #
 # Classes are the Attendance tab's date columns plus every assignment start
-# date that has arrived. Each class is worth 1: 0.5 for being marked present
-# and 0.5 for a submission recorded under that date in the Submissions tab.
+# date that has arrived. A class counts only if the student was marked present
+# and has a submission recorded under that date in the Submissions tab.
 import json
 import os
 import sys
@@ -118,7 +118,7 @@ def main():
             in_class = class_data.get(roll_no, {}).get(d, "").lower() in CLASS_PRESENT_VALUES
             submitted = submitted_on(submission_data.get(roll_no, {}).get(d, ""), d)
             records.append({"class": in_class, "submitted": submitted})
-        score = sum(0.5 * r["class"] + 0.5 * bool(r["submitted"]) for r in records)
+        score = sum(r["class"] and bool(r["submitted"]) for r in records)
         students.append(
             {
                 "roll_no": roll_no,
