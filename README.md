@@ -20,10 +20,13 @@ In the commands below, replace:
 
 ### How attendance works
 
-Every lab is worth **1**:
+A lab counts only if you do **both**:
 
-- **½** for being marked present in class on the lab day, and
-- **½** for submitting that week's work before the deadline.
+- get marked present in class on the lab day, and
+- submit that week's work before the deadline.
+
+There is no half attendance. The site shows half-filled cells only so you can
+see which of the two you're missing.
 
 Each assignment shows its dates on the course site, e.g. *21 Sep – 25 Sep*.
 You can open your PR on any day in that window, and it counts towards the
@@ -282,12 +285,13 @@ Attendance lives in the Google Sheet:
   enter `P` for each student who attended. Blank means absent. Type the
   header as plain text: if Sheets reformats it as a date like `05/10/2026`,
   set the column's format to **Plain text** first.
-- **Then publish it:** Actions tab → **Deploy pages** → **Run workflow**.
-  Sheet edits don't trigger anything by themselves. The site also refreshes
-  automatically whenever a student opens a PR.
+- **Publishing:** the site rebuilds from the sheet every 15 minutes and
+  whenever a student opens a PR. To publish immediately: Actions tab →
+  **Deploy pages** → **Run workflow**.
 
-Each class is scored **½** for `P` in Attendance plus **½** for a submission
-under that date in Submissions. The site shows the total and a percentage.
+A class counts only if the student has both `P` in Attendance and a
+submission under that date in Submissions. One without the other is shown
+as a half cell on the site but counts as absent.
 
 When a PR is opened, `.github/workflows/attendance.yml`:
 
@@ -301,7 +305,7 @@ When a PR is opened, `.github/workflows/attendance.yml`:
 4. comments on the PR with what was recorded and why anything wasn't.
 
 To excuse a student or fix a mistake, edit their cell in **Submissions** by
-hand (`Submitted 2026-10-07`) and re-run **Deploy pages**.
+hand (`Submitted 2026-10-07`). It shows on the site within 15 minutes.
 
 ### Merging PRs
 
