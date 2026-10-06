@@ -1,7 +1,7 @@
 name: Deploy pages
 
 # Builds the whole site (assignments + attendance) at deploy time, so no
-# generated files are committed. Re-run manually after editing the sheet.
+# generated files are committed. Also rebuilds every 15 min to pick up sheet edits.
 on:
   push:
     branches: [main]
@@ -12,6 +12,8 @@ on:
   workflow_run:
     workflows: ["Attendance"]
     types: [completed]
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 permissions:
