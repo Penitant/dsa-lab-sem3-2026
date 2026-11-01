@@ -2,7 +2,7 @@
 title: PyDTree — Build an Adaptive 20-Questions Engine
 week: 4
 category: Trees
-start: 2026-10-30
+start: 2026-10-23
 end: 2026-11-08
 ---
 

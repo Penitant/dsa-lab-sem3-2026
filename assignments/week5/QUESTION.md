@@ -2,7 +2,7 @@
 title: Debug the GPU Scheduler
 week: 5
 category: Heaps
-start: 2026-11-06
+start: 2026-10-30
 end: 2026-11-08
 ---
 
