@@ -1,0 +1,41 @@
+40
+SUBMIT train-cat-detector 2
+SUBMIT finetune-meme-llm 1
+SUBMIT rlhf-on-reddit 5
+SUBMIT embed-all-of-wikipedia 5
+SUBMIT vibe-check-model 5
+SUBMIT deepfake-detector 1
+SUBMIT sentiment-on-tweets 1
+SUBMIT auto-commit-msg-gen 5
+SUBMIT overfit-on-purpose 5
+SUBMIT chatbot-for-chai-orders 2
+RUN
+RUN
+SUBMIT resume-buzzword-gen 5
+SUBMIT predict-mess-menu 2
+SUBMIT gpt-for-attendance 2
+SUBMIT ocr-handwritten-notes 2
+RUN
+RUN
+RUN
+RUN
+SUBMIT lofi-beat-gen 5
+RUN
+SUBMIT dog-or-muffin 5
+RUN
+RUN
+RUN
+SUBMIT spam-filter-v9 5
+SUBMIT code-review-bot 3
+SUBMIT emoji-translator 4
+SUBMIT exam-answer-predictor 2
+CANCEL auto-commit-msg-gen
+SUBMIT cricket-score-forecaster 3
+RUN
+CANCEL dog-or-muffin
+SUBMIT traffic-light-rl 1
+SUBMIT bollywood-plot-gen 4
+SUBMIT horoscope-transformer 3
+SUBMIT stable-diffusion-selfies 4
+SUBMIT voice-clone-prof 1
+CANCEL cricket-score-forecaster

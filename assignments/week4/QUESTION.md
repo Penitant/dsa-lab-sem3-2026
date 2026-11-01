@@ -3,7 +3,7 @@ title: PyDTree — Build an Adaptive 20-Questions Engine
 week: 4
 category: Trees
 start: 2026-10-30
-end: 2026-11-10
+end: 2026-11-08
 ---
 
 **File to Submit:** `pydtree.py`  
@@ -17,7 +17,7 @@ end: 2026-11-10
 
 1. Ensure your code is placed inside your student directory: `students/<registration-no>/week4/pydtree.py`.
 2. Do not import external third-party libraries (no `pip install` packages; standard `json`, `sys`, and `typing` only).
-3. Open a pull request from your fork to `main` on or before **10 Nov 2026**. Touch only your own folder.
+3. Open a pull request from your fork to `main` on or before **8 Nov 2026**. Touch only your own folder.
 
 ---
 

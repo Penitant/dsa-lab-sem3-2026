@@ -1,0 +1,9 @@
+8
+SUBMIT train-cat-detector 3
+SUBMIT finetune-meme-llm 1
+SUBMIT rlhf-on-reddit 2
+RUN
+RUN
+SUBMIT embed-all-of-wikipedia 5
+RUN
+RUN

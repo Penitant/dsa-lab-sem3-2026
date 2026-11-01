@@ -1,0 +1,16 @@
+15
+SUBMIT train-cat-detector 1
+SUBMIT finetune-meme-llm 9
+SUBMIT rlhf-on-reddit 8
+SUBMIT embed-all-of-wikipedia 6
+SUBMIT vibe-check-model 7
+SUBMIT deepfake-detector 1
+SUBMIT sentiment-on-tweets 3
+CANCEL finetune-meme-llm
+CANCEL auto-commit-msg-gen
+RUN
+RUN
+RUN
+RUN
+RUN
+RUN

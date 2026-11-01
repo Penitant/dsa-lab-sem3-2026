@@ -295,7 +295,9 @@ Attendance lives in the Google Sheet:
 
 A class counts only if the student has both `P` in Attendance and a
 submission under that date in Submissions. One without the other is shown
-as a half cell on the site but counts as absent.
+as a half cell on the site but counts as absent. A class date with no
+assignment (an Attendance column with no matching `start` date) counts on
+`P` alone and is labelled "No assignment" on the site.
 
 When a PR is opened, `.github/workflows/attendance.yml`:
 

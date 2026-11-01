@@ -3,7 +3,8 @@
 #
 # Classes are the Attendance tab's date columns plus every assignment start
 # date that has arrived. A class counts only if the student was marked present
-# and has a submission recorded under that date in the Submissions tab.
+# and has a submission recorded under that date in the Submissions tab. A class
+# with no assignment counts on presence alone.
 import json
 import os
 import sys
@@ -117,8 +118,11 @@ def main():
         for d in class_dates:
             in_class = class_data.get(roll_no, {}).get(d, "").lower() in CLASS_PRESENT_VALUES
             submitted = submitted_on(submission_data.get(roll_no, {}).get(d, ""), d)
-            records.append({"class": in_class, "submitted": submitted})
-        score = sum(r["class"] and bool(r["submitted"]) for r in records)
+            if d in week_by_date:
+                records.append({"class": in_class, "submitted": submitted})
+            else:
+                records.append({"class": in_class, "submitted": None, "no_assignment": True})
+        score = sum(r["class"] and (bool(r["submitted"]) or r.get("no_assignment", False)) for r in records)
         students.append(
             {
                 "roll_no": roll_no,
