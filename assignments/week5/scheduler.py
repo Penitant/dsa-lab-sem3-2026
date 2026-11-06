@@ -56,7 +56,7 @@ class GPUQueue:
         self.sift_down(0)
         return top
 
-    def cancel(self, name)
+    def cancel(self, name):
         for i in range(len(self.h)):
             if self.h[i].name == name:
                 last = self.h.pop()
