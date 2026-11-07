@@ -1,0 +1,1 @@
+Week 5 - Heaps assignment\nRegistration number: 25UG00530\n\nscheduler.py contains the corrected solution.\nCopy the official tests folder from the course assignment into this folder.\nExpected layout: tests/1.in, tests/1.out, ... tests/5.in, tests/5.out\n\nRun from this folder with: python scheduler.py < tests/1.in\n
