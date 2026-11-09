@@ -3,14 +3,14 @@ title: Linked Lists
 week: 2
 category: Linked Lists
 start: 2026-09-25
-end: 2026-11-08
+end: 2026-11-12
 ---
 
 ## Submission
 
 1. Create your folder: `students/<registration-no>/week2/` (e.g. `students/24UG00388/week2/`).
 2. Save each question as a separate file: `q1.py`, `q2.py`, `q3.py`, and `hots.py` (optional).
-3. Open a pull request from your fork to `main` on or before **8 Nov 2026**. Touch only your own folder.
+3. Open a pull request from your fork to `main` on or before **12 Nov 2026**. Touch only your own folder.
 
 > [!NOTE]
 > Use of AI tools cannot be technically restricted. However, these exercises are designed to build algorithmic thinking, which develops only through working the problems yourself. You are strongly encouraged to attempt them without AI assistance.

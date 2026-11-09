@@ -3,7 +3,7 @@ title: PyStackCalc — Build Your Own Terminal Calculator
 week: 1
 category: Stacks
 start: 2026-09-18
-end: 2026-11-08
+end: 2026-11-12
 ---
 
 **File to Submit:** `pystackcalc.py`
@@ -16,7 +16,7 @@ end: 2026-11-08
 
 1. Create your folder: `students/<registration-no>/week1/` (e.g. `students/24UG00388/week1/`).
 2. Save your code as `pystackcalc.py`.
-3. Open a pull request from your fork to `main` on or before **8 Nov 2026**. Touch only your own folder.
+3. Open a pull request from your fork to `main` on or before **12 Nov 2026**. Touch only your own folder.
 
 ---
 

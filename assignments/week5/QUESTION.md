@@ -3,7 +3,7 @@ title: Debug the GPU Scheduler
 week: 5
 category: Heaps
 start: 2026-10-30
-end: 2026-11-08
+end: 2026-11-12
 ---
 
 **File to Fix and Submit:** [scheduler.py](scheduler.py)  
@@ -16,7 +16,7 @@ end: 2026-11-08
 
 1. Copy `scheduler.py` and the `tests` folder into your folder: `students/<registration-no>/week5/`.
 2. Fix the bugs in `scheduler.py` so that every test passes.
-3. Open a pull request from your fork to `main` on or before **8 Nov 2026**. Touch only your own folder.
+3. Open a pull request from your fork to `main` on or before **12 Nov 2026**. Touch only your own folder.
 
 > [!NOTE]
 > Use of AI tools cannot be technically restricted. However, these exercises are designed to build algorithmic thinking, which develops only through working the problems yourself. You are strongly encouraged to attempt them without AI assistance.
