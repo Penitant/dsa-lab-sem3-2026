@@ -1,0 +1,56 @@
+55
+SUBMIT train-cat-detector 5
+CANCEL train-cat-detector
+SUBMIT finetune-meme-llm 5
+SUBMIT rlhf-on-reddit 5
+SUBMIT embed-all-of-wikipedia 5
+CANCEL finetune-meme-llm
+SUBMIT vibe-check-model 2
+SUBMIT deepfake-detector 1
+RUN
+SUBMIT sentiment-on-tweets 4
+RUN
+RUN
+SUBMIT auto-commit-msg-gen 1
+CANCEL rlhf-on-reddit
+SUBMIT overfit-on-purpose 2
+CANCEL auto-commit-msg-gen
+SUBMIT chatbot-for-chai-orders 4
+SUBMIT resume-buzzword-gen 5
+CANCEL overfit-on-purpose
+SUBMIT predict-mess-menu 3
+SUBMIT gpt-for-attendance 1
+SUBMIT ocr-handwritten-notes 3
+SUBMIT lofi-beat-gen 5
+CANCEL vibe-check-model
+RUN
+SUBMIT dog-or-muffin 2
+RUN
+SUBMIT spam-filter-v9 5
+CANCEL gpt-for-attendance
+SUBMIT code-review-bot 3
+SUBMIT emoji-translator 1
+CANCEL embed-all-of-wikipedia
+SUBMIT exam-answer-predictor 1
+SUBMIT cricket-score-forecaster 4
+SUBMIT traffic-light-rl 5
+RUN
+CANCEL predict-mess-menu
+SUBMIT bollywood-plot-gen 3
+SUBMIT horoscope-transformer 4
+CANCEL sentiment-on-tweets
+SUBMIT stable-diffusion-selfies 1
+SUBMIT voice-clone-prof 4
+CANCEL dog-or-muffin
+RUN
+SUBMIT auto-excuse-writer 5
+SUBMIT meeting-summarizer 2
+SUBMIT slide-deck-gen 4
+SUBMIT bug-finder-9000 4
+CANCEL deepfake-detector
+RUN
+CANCEL traffic-light-rl
+CANCEL chatbot-for-chai-orders
+RUN
+RUN
+CANCEL spam-filter-v9
