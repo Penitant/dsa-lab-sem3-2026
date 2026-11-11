@@ -1,0 +1,21 @@
+{
+    "question": "Does it live in water?",
+    "yes": {
+        "guess": "Dolphin"
+    },
+    "no": {
+        "question": "Does it bark?",
+        "yes": {
+            "question": "Doesit not bark?",
+            "yes": {
+                "guess": "Dog"
+            },
+            "no": {
+                "guess": "elephant"
+            }
+        },
+        "no": {
+            "guess": "Elephant"
+        }
+    }
+}
